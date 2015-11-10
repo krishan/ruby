@@ -1308,6 +1308,41 @@ class TestHash < Test::Unit::TestCase
     assert_nil(h.dig(:c, 1))
   end
 
+  def test_cmp
+    h1 = {a:1, b:2}
+    h2 = {a:1, b:2, c:3}
+
+    assert_operator(h1, :<=, h1)
+    assert_operator(h1, :<=, h2)
+    assert_not_operator(h2, :<=, h1)
+    assert_operator(h2, :<=, h2)
+
+    assert_operator(h1, :>=, h1)
+    assert_not_operator(h1, :>=, h2)
+    assert_operator(h2, :>=, h1)
+    assert_operator(h2, :>=, h2)
+
+    assert_not_operator(h1, :<, h1)
+    assert_operator(h1, :<, h2)
+    assert_not_operator(h2, :<, h1)
+    assert_not_operator(h2, :<, h2)
+
+    assert_not_operator(h1, :>, h1)
+    assert_not_operator(h1, :>, h2)
+    assert_operator(h2, :>, h1)
+    assert_not_operator(h2, :>, h2)
+  end
+
+  def test_to_proc
+    h = {
+      1 => 10,
+      2 => 20,
+      3 => 30,
+    }
+
+    assert_equal([10, 20, 30], [1, 2, 3].map(&h))
+  end
+
   class TestSubHash < TestHash
     class SubHash < Hash
       def reject(*)

@@ -2714,6 +2714,71 @@ rb_hash_dig(int argc, VALUE *argv, VALUE self)
     return rb_obj_dig(argc, argv, self, Qnil);
 }
 
+static int
+hash_le_i(VALUE key, VALUE value, VALUE arg)
+{
+    VALUE *args = (VALUE *)arg;
+    VALUE v = rb_hash_lookup2(args[0], key, Qundef);
+    if (v != Qundef && rb_equal(value, v)) return ST_CONTINUE;
+    args[1] = Qfalse;
+    return ST_STOP;
+}
+
+static VALUE
+hash_le(VALUE hash1, VALUE hash2)
+{
+    VALUE args[2];
+    args[0] = hash2;
+    args[1] = Qtrue;
+    rb_hash_foreach(hash1, hash_le_i, (VALUE)args);
+    return args[1];
+}
+
+static VALUE
+rb_hash_le(VALUE hash, VALUE other)
+{
+    other = to_hash(other);
+    if (RHASH_SIZE(hash) > RHASH_SIZE(other)) return Qfalse;
+    return hash_le(hash, other);
+}
+
+static VALUE
+rb_hash_lt(VALUE hash, VALUE other)
+{
+    other = to_hash(other);
+    if (RHASH_SIZE(hash) >= RHASH_SIZE(other)) return Qfalse;
+    return hash_le(hash, other);
+}
+
+static VALUE
+rb_hash_ge(VALUE hash, VALUE other)
+{
+    other = to_hash(other);
+    if (RHASH_SIZE(hash) < RHASH_SIZE(other)) return Qfalse;
+    return hash_le(other, hash);
+}
+
+static VALUE
+rb_hash_gt(VALUE hash, VALUE other)
+{
+    other = to_hash(other);
+    if (RHASH_SIZE(hash) <= RHASH_SIZE(other)) return Qfalse;
+    return hash_le(other, hash);
+}
+
+static VALUE
+hash_proc_call(VALUE key, VALUE hash, int argc, const VALUE *argv, VALUE passed_proc)
+{
+    rb_check_arity(argc, 1, 1);
+    return rb_hash_aref(hash, *argv);
+}
+
+static VALUE
+rb_hash_to_proc(VALUE hash)
+{
+    return rb_func_proc_new(hash_proc_call, hash);
+}
+
 static int path_tainted = -1;
 
 static char **origenviron;
@@ -4080,6 +4145,7 @@ Init_Hash(void)
     rb_define_method(rb_cHash,"to_a", rb_hash_to_a, 0);
     rb_define_method(rb_cHash,"inspect", rb_hash_inspect, 0);
     rb_define_alias(rb_cHash, "to_s", "inspect");
+    rb_define_method(rb_cHash,"to_proc", rb_hash_to_proc, 0);
 
     rb_define_method(rb_cHash,"==", rb_hash_equal, 1);
     rb_define_method(rb_cHash,"[]", rb_hash_aref, 1);
@@ -4138,6 +4204,11 @@ Init_Hash(void)
 
     rb_define_method(rb_cHash, "any?", rb_hash_any_p, 0);
     rb_define_method(rb_cHash, "dig", rb_hash_dig, -1);
+
+    rb_define_method(rb_cHash, "<=", rb_hash_le, 1);
+    rb_define_method(rb_cHash, "<", rb_hash_lt, 1);
+    rb_define_method(rb_cHash, ">=", rb_hash_ge, 1);
+    rb_define_method(rb_cHash, ">", rb_hash_gt, 1);
 
     /* Document-class: ENV
      *

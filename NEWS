@@ -59,6 +59,8 @@ with all sufficient information, see the ChangeLog file.
 
   * Hash#fetch_values [Feature #10017]
   * Hash#dig [Feature #11643]
+  * Hash#<=, Hash#<, Hash#>=, Hash#> [Feature #10984]
+  * Hash#to_proc [Feature #11653]
 
 * IO
 
@@ -208,6 +210,11 @@ with all sufficient information, see the ChangeLog file.
 * rb_define_class_id_under() now raises a TypeError exception when the
   class is already defined but its superclass does not match the given
   superclass, as well as definitions in ruby level.
+
+* rb_timespec_now() is added to fetch current datetime as struct timespec.
+
+* rb_time_timespec_new() is added to create a time object with epoch,
+  nanosecond, and UTC/localtime/time offset arguments.
 
 === Build system updates
 
